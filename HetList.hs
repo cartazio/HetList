@@ -44,6 +44,14 @@ let  (VHWrap ls) = VHWrap  $ ("yo" `hcons ` 7 `hcons` hnil) in ls
 
 -}
 
+{-
+
+*HetList> let ls@(a:as) = 1 `hcons` 2 `hcons` hnil in ls
+[1,2]
+*HetList> :t let ls@(a:as) = 1 `hcons` 2 `hcons` hnil in ls
+let ls@(a:as) = 1 `hcons` 2 `hcons` hnil in ls :: Num h => [h]
+-}
+
 
 
 data VHList (xs ::[*] ) where
@@ -58,14 +66,8 @@ data SizedList (n :: Nat) a where
   ConL :: a -> SizedList n a -> SizedList (S n) a
 
 
-
-
 class HetCons (f:: k -> * ) (h :: * ) (tl:: k) (res :: k) | f h tl -> res , f h res -> tl, f res tl -> h  where
-  --type HApp :: (k-> *)-> k -> *
-  --type HCons f h tl :: k
-  --type HUnCons f h res :: k   -- not sure if this is correct
-  hcons :: -- (res ~ HCons f h tl  ,tl ~ (HUnCons f h res))  =>
-    h -> f tl -> f res
+  hcons :: h -> f tl -> f res
 
 
 class HetNil (f:: k -> * ) (a :: k)  where
@@ -79,15 +81,12 @@ instance (res ~ '[])=> HetNil VHList res  where
   hnil = VHNil
 
 instance HetCons VHList (a:: *) (bs :: [*]) ((a ': bs) :: [*]) where
-  --type HCons VHList a bs = a ': bs
-  --type HUnCons VHList a (a ': bs)= bs
   hcons = VHCons
 
-
+-- merten trick again
 instance (a~b,b~c,a~c)=> HetCons [] (a :: *) (b :: * ) (c:: *) where
-  hcons = (:)
-  --type HCons [] a a = a
-  --type HUnCons [] a a = a
+    hcons = (:)
+
 
 
 
