@@ -81,9 +81,11 @@ data Rec :: (u -> *) -> [u] -> * where
 instance  Show (Rec f '[]) where
   show _ = "RNil"
 
-instance (Show (f a), Show (Rec f as)) => Show (Rec f (a ': as)) where
+instance (Show (aval),aval ~ f a , Show (Rec f as)) => Show (Rec f (a ': as)) where
    show ((:&) v  vs) = show v ++ " :& " ++ show vs
    --show _ = error "impossible"
+
+
 
 data VHList (xs ::[*] ) where
   VHNil :: VHList '[]
@@ -137,7 +139,7 @@ instance (Show a, Show (SizedList n a) ) => Show (SizedList (S n) a) where
 --instance (n~Z)=>HetNil (Flip2Nat SizedList a) n  where
 --    hnil = F2N ZL
 
-instance (a ~ b, b~c,a~c, m~(S n),aval~a) =>HetCons (SizedList n) (SizedList m) a aval  b c   where
+instance (a ~ b, b~c,a~c, m~(S n)) =>HetCons (SizedList n) (SizedList m) a   b c   where
   hcons = ConL
 
 instance  (n~Z)=>HetNil (SizedList n a)  where
@@ -149,22 +151,24 @@ note, f' res -> h
 precludes an ordered hrecord type (i think)
 -}
 
-class HetCons (f:: k -> * ) (f':: k -> * ) (h :: hd ) (hval :: * ) (tl:: k) (res :: k)
+class HetCons (f:: k -> * ) (f':: m -> * ) (h :: * ) (tl:: k) (res :: m)
           | f-> f', f'-> f
             ,f h tl -> res , f h res -> tl, f res tl -> h
             , f' res -> h
             , f  tl res  -> h
             , f'  tl res -> h
+            --, f  tl res  -> hval
+            --, f'  tl res -> hval
             --, f hval tl res  -> h
             --, f' hval tl res -> h
             --, f hval -> h
-            , f h -> hval
+            --, f h -> hval
             --, f' hval -> h
-            , f' h -> hval
+            --, f' h -> hval
             -- , f' h tl -> res
             --, f' h tl -> res , f' res tl -> h , f' h res -> tl
                  where
-  hcons :: hval  -> f tl -> f' res
+  hcons :: h  -> f tl -> f' res
   --hlift :: h -> hval
   --hunlift :: hval -> h
 
@@ -183,12 +187,12 @@ instance HetNil [a]  where
 instance (a ~ ('[] :: [*] )) => HetNil  (VHList a) where ---  (res ~ '[])=> HetNil VHList res  where
   hnil = VHNil
 
-instance (a~aval)=>HetCons VHList  VHList (a:: *) ( aval:: * ) (bs :: [*]) ( (a ': bs) :: [*] ) where
+instance (a~aDup) => HetCons VHList  VHList (a:: *)  (bs :: [*]) ( (aDup ': bs) :: [*] ) where
   hcons = VHCons
 
 
 -- merten trick again
-instance (a~b,b~c,a~c, aval~ a)=> HetCons []  [] (a :: *) (aval:: *) (b :: * ) (c:: *) where
+instance (a~b,b~c,a~c)=> HetCons []  [] (a :: *)  (b :: * ) (c:: *) where
     hcons = (:)
 
 
@@ -197,7 +201,7 @@ instance (a~b,b~c,a~c, aval~ a)=> HetCons []  [] (a :: *) (aval:: *) (b :: * ) (
 instance (ls ~ ('[]::[k]))=>HetNil (Rec  f  ls)  where
   hnil = RNil
 
-instance (f~g, val ~ f r)=>  HetCons (Rec f ) (Rec g)  r val  rs (r ': rs) where
+instance (f~g, val ~ f r)=>  HetCons (Rec f ) (Rec g)  val  rs (r ': rs) where
   hcons =  (:&)
 
 
