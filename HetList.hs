@@ -58,8 +58,15 @@ data VHList (xs ::[*] ) where
   VHNil :: VHList '[]
   VHCons :: a -> VHList ls -> VHList (a ': ls)
 
+instance Show (VHList '[]) where
+  show _ = "VHNil"
+
+instance (Show (VHList bs), Show a )=> Show (VHList (a ': bs)) where
+  show (VHCons a rest) =  show a ++ " `VHCons` " ++ show rest
+
 
 data Nat = S Nat | Z
+  deriving show
 
 data SizedList (n :: Nat) a where
   ZL :: SizedList Z a
