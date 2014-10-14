@@ -54,6 +54,17 @@ let ls@(a:as) = 1 `hcons` 2 `hcons` hnil in ls :: Num h => [h]
 -}
 
 
+{-
+*HetList> :t (\x -> case x of ls@(a `ConL` b) -> ls) :: SizedList (S n) a -> SizedList (S n) a
+(\x -> case x of ls@(a `ConL` b) -> ls) :: SizedList (S n) a -> SizedList (S n) a
+  :: SizedList (S n) a -> SizedList (S n) a
+
+*HetList> :t let ls = 1 `hcons` 2 `hcons` (hnil )  in ls :: (SizedList (S (S Z)) Int)
+let ls = 1 `hcons` 2 `hcons` (hnil )  in ls :: (SizedList (S (S Z)) Int)
+  :: SizedList (S (S Z)) Int
+
+-}
+
 
 data VHList (xs ::[*] ) where
   VHNil :: VHList '[]
@@ -74,6 +85,8 @@ type Z = 'Z
 data SizedList (n :: Nat) a where
   ZL :: SizedList Z a
   ConL :: a -> SizedList n a -> SizedList (S n) a
+
+
 
 {-
 
