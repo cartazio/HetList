@@ -111,8 +111,14 @@ instance (a ~ b, b~c,a~c) =>HetCons (SizedList n) (SizedList (S n)) a b c   wher
 instance  HetNil (SizedList Z) a where
   hnil = ZL
 
+{-
+
+note, f' res -> h
+precludes an ordered hrecord type (i think)
+-}
+
 class HetCons (f:: k -> * ) (f':: k -> * ) (h :: * ) (tl:: k) (res :: k)
-          | f-> f', f'-> f,f h tl -> res , f h res -> tl, f res tl -> h
+          | f-> f', f'-> f,f h tl -> res , f h res -> tl, f res tl -> h, f' res -> h
             --, f' h tl -> res , f' res tl -> h , f' h res -> tl
                  where
   hcons :: h -> f tl -> f' res
