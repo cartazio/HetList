@@ -11,7 +11,10 @@
 {-# LANGUAGE StandaloneDeriving #-}
 {-#  LANGUAGE PolyKinds #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE OverlappingInstances #-}
 module HetList where
+
+import Control.Applicative
 
 --import  qualified   Data.Vinyl.Core as VC
 --import  qualified   Data.Vinyl.TyFun as TF
@@ -198,10 +201,13 @@ instance (a~b,b~c,a~c)=> HetCons []  [] (a :: *)  (b :: * ) (c:: *) where
 
 
 
-instance (ls ~ ('[]::[k]))=>HetNil (Rec  f  ls)  where
+instance (ls ~ ('[]::[k]))=>HetNil (Rec  (f:: k -> *)  ls)  where
   hnil = RNil
 
-instance (f~g, val ~ f r)=>  HetCons (Rec f ) (Rec g)  val  rs (r ': rs) where
+instance (Applicative f)=>  HetCons (Rec (f :: * -> * )) (Rec f)  r  rs (r ': rs) where
+  hcons v rs = (pure v)  :& rs
+
+instance ( val ~ f r)=>  HetCons (Rec f ) (Rec f)  val  rs (r ': rs) where
   hcons =  (:&)
 
 
