@@ -105,10 +105,10 @@ instance (Show a, Show (SizedList n a) ) => Show (SizedList (S n) a) where
 --instance (n~Z)=>HetNil (Flip2Nat SizedList a) n  where
 --    hnil = F2N ZL
 
-instance (a ~ b, b~c,a~c) =>HetCons (SizedList n) (SizedList (S n)) a b c   where
+instance (a ~ b, b~c,a~c, m~(S n)) =>HetCons (SizedList n) (SizedList m) a b c   where
   hcons = ConL
 
-instance  HetNil (SizedList Z) a where
+instance  (n~Z)=>HetNil (SizedList n) a where
   hnil = ZL
 
 {-
