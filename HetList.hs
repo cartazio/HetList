@@ -204,11 +204,27 @@ instance (a~b,b~c,a~c)=> HetCons []  [] (a :: *)  (b :: * ) (c:: *) where
 instance (ls ~ ('[]::[k]))=>HetNil (Rec  (f:: k -> *)  ls)  where
   hnil = RNil
 
-instance (Applicative f)=>  HetCons (Rec (f :: * -> * )) (Rec f)  r  rs (r ': rs) where
-  hcons v rs = (pure v)  :& rs
+-- this allows for cute notation, but the nesting kinda backfires
+--instance (Applicative f)=>  HetCons (Rec (f :: * -> * )) (Rec f)  r  rs (r ': rs) where
+--  hcons v rs = (pure v)  :& rs
 
-instance ( val ~ f r)=>  HetCons (Rec f ) (Rec f)  val  rs (r ': rs) where
+instance (f ~ g ,  val ~ f r)=>  HetCons (Rec f ) (Rec g)  val  rs (r ': rs) where
   hcons =  (:&)
+
+
+{-
+with these two overlapping instances
+*HetList> let ls :: (Rec Maybe '[Char,Int]) = 'a' `hcons` (Nothing) `hcons` (hnil )  in ls
+Just 'a' :& Nothing :& RNil
+
+> let ls :: (Rec Maybe '[Char,Int]) = 'a' `hcons` (7 :: Int) `hcons` (hnil )  in ls
+Just 'a' :& Just 7 :& RNil
+both  work
+
+but the overlap
+
+-}
+
 
 
 
