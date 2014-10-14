@@ -75,24 +75,47 @@ data SizedList (n :: Nat) a where
   ZL :: SizedList Z a
   ConL :: a -> SizedList n a -> SizedList (S n) a
 
+{-
+
+1) this works ok
+*HetList> :t let (F2N ls) = 1 `hcons` 2 `hcons` (hnil :: Flip2Nat SizedList Int Z )in ls
+let (F2N ls) = 1 `hcons` 2 `hcons` (hnil :: Flip2Nat SizedList Int Z )in ls
+  :: SizedList (S (S 'Z)) Int
+
+2) this is ok
+
+
+
+
+-}
+
+
 instance Show (SizedList Z a) where
     show _ = "ZL"
 
 instance (Show a, Show (SizedList n a) ) => Show (SizedList (S n) a) where
   show (ConL a as) =  show a ++ " `ConL` " ++ show as
 
-newtype Flip2Nat (f :: Nat -> * -> * ) (e :: *) (n :: Nat) = F2N { getFN :: f n e}
-  deriving Show
+--newtype Flip2Nat (f :: Nat -> * -> * ) (e :: *) (n :: Nat) = F2N { getFN :: f n e}
+  --deriving Show
 
-instance (m ~ S n)=> HetCons (Flip2Nat SizedList a) a (n :: Nat) (m :: Nat ) where
-  hcons = \h (F2N tl) -> F2N $!ConL h tl
+--instance (m ~ S n)=> HetCons (Flip2Nat SizedList a) a (n :: Nat) (m :: Nat ) where
+--  hcons = \h (F2N tl) -> F2N $!ConL h tl
 
-instance (n~Z)=>HetNil (Flip2Nat SizedList a) n  where
-    hnil = F2N ZL
+--instance (n~Z)=>HetNil (Flip2Nat SizedList a) n  where
+--    hnil = F2N ZL
 
+instance (a ~ b, b~c,a~c) =>HetCons (SizedList n) (SizedList (S n)) a b c   where
+  hcons = ConL
 
-class HetCons (f:: k -> * ) (h :: * ) (tl:: k) (res :: k) | f h tl -> res , f h res -> tl, f res tl -> h  where
-  hcons :: h -> f tl -> f res
+instance  HetNil (SizedList Z) a where
+  hnil = ZL
+
+class HetCons (f:: k -> * ) (f':: k -> * ) (h :: * ) (tl:: k) (res :: k)
+          | f-> f', f'-> f,f h tl -> res , f h res -> tl, f res tl -> h
+            --, f' h tl -> res , f' res tl -> h , f' h res -> tl
+                 where
+  hcons :: h -> f tl -> f' res
 
 
 class HetNil (f:: k -> * ) (a :: k)  where
@@ -105,11 +128,11 @@ instance HetNil [] a where
 instance (res ~ '[])=> HetNil VHList res  where
   hnil = VHNil
 
-instance HetCons VHList (a:: *) (bs :: [*]) ((a ': bs) :: [*]) where
+instance HetCons VHList  VHList (a:: *) (bs :: [*]) ((a ': bs) :: [*]) where
   hcons = VHCons
 
 -- merten trick again
-instance (a~b,b~c,a~c)=> HetCons [] (a :: *) (b :: * ) (c:: *) where
+instance (a~b,b~c,a~c)=> HetCons []  [] (a :: *) (b :: * ) (c:: *) where
     hcons = (:)
 
 
