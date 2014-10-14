@@ -12,26 +12,11 @@
 {-#  LANGUAGE PolyKinds #-}
 module HetList where
 
---class HConsFD res head tail where  -- | head tail -> res , res head -> tail, tail res -> head where
---  type HConsRes head tail
---  type HConsHead res tail
---  type HConsTail  res head
---  hcons ::  (res ~ HConsRes head tail ,head ~ HConsHead res tail,tail ~ HConsTail res head )=>
---    head -> tail -> res
---class HNilFD res where
---  hnil :: res
---instance HNilFD [a] where
---  hnil = []
---maybe try the the a~b~c trick is due to eric mertens
+
 
 infixr 3 `hcons`
 infixr 3 `VHCons`
 
---instance   HConsFD [a] a [a] where
---  type HConsTail  [a] a = [a]
---  type HConsHead [a] [a] =  a
---  type HConsRes a [a]  = [a]
---  hcons = (:)
 
 
 {-
@@ -45,8 +30,32 @@ infixr 3 `VHCons`
 -}
 
 
+{-
 
-data HPair a b = HP a b
+
+*HetList> let  (VHWrap ls) = VHWrap  $ ("yo" `hcons ` 'a'  `hcons` hnil) in ls
+"yo" `VHCons` 'a' `VHCons` VHNil
+*HetList> :t let  (VHWrap ls) = VHWrap  $ ("yo" `hcons ` 'a'  `hcons` hnil) in ls
+let  (VHWrap ls) = VHWrap  $ ("yo" `hcons ` 'a'  `hcons` hnil) in ls
+  :: VHList '[[Char], Char]
+*HetList> :t let  (VHWrap ls) = VHWrap  $ ("yo" `hcons ` 7 `hcons` hnil) in ls
+let  (VHWrap ls) = VHWrap  $ ("yo" `hcons ` 7 `hcons` hnil) in ls
+  :: Num h => VHList '[[Char], h]
+
+-}
+
+
+
+data VHList (xs ::[*] ) where
+  VHNil :: VHList '[]
+  VHCons :: a -> VHList ls -> VHList (a ': ls)
+
+
+data Nat = S Nat | Z
+
+data SizedList (n :: Nat) a where
+  ZL :: SizedList Z a
+  ConL :: a -> SizedList n a -> SizedList (S n) a
 
 
 
@@ -59,13 +68,14 @@ class HetCons (f:: k -> * ) (h :: * ) (tl:: k) (res :: k) | f h tl -> res , f h 
     h -> f tl -> f res
 
 
-class HetNil (f :: k -> * )  (tl  :: k) where
-  hnil :: f tl
+class HetNil (f:: k -> * ) (a :: k)  where
+  hnil :: f a
 
-instance HetNil  []  ( a :: * ) where
+instance HetNil [] a where
   hnil = []
 
-instance HetNil VHList '[] where
+-- need to use the mertens trick
+instance (res ~ '[])=> HetNil VHList res  where
   hnil = VHNil
 
 instance HetCons VHList (a:: *) (bs :: [*]) ((a ': bs) :: [*]) where
@@ -79,27 +89,5 @@ instance (a~b,b~c,a~c)=> HetCons [] (a :: *) (b :: * ) (c:: *) where
   --type HCons [] a a = a
   --type HUnCons [] a a = a
 
-data VHList (xs ::[*] ) where
-  VHNil :: VHList '[]
-  VHCons :: a -> VHList ls -> VHList (a ': ls)
-
-instance Show (VHList '[]) where
-  show _ = "VHNil"
-
-instance (Show (VHList bs), Show a )=> Show (VHList (a ': bs)) where
-  show (VHCons a rest) =  show a ++ " `VHCons` " ++ show rest
 
 
---let (HRecWrap hrec) = [(::"Foo",7),(::"Bar","hello")]
-
--- sketch of an idea by gershom
-
-
---class FromHList h  r | h  -> r where
---    fromHList :: HList h -> r
-
---instance FromHList (HList '[]) [a]  where
---    fromHList HNil = []
-
---instance (FromHList (HList b) [] a) => FromHList (HList (a ': b)) [] a where
---    fromHList (HCons x y) = x : fromHList y
