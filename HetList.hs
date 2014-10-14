@@ -12,7 +12,8 @@
 {-#  LANGUAGE PolyKinds #-}
 module HetList where
 
-
+--import  qualified   Data.Vinyl.Core as VC
+--import  qualified   Data.Vinyl.TyFun as TF
 
 infixr 3 `hcons`
 infixr 3 `VHCons`
@@ -153,6 +154,13 @@ instance HetCons VHList  VHList (a:: *) (bs :: [*]) ((a ': bs) :: [*]) where
 -- merten trick again
 instance (a~b,b~c,a~c)=> HetCons []  [] (a :: *) (b :: * ) (c:: *) where
     hcons = (:)
+
+
+--instance (ls ~ '[])=>HetNil (VC.Rec el f) ls  where
+--  hnil = VC.RNil
+
+--instance (val~ (f  (el TF.$ r) )) =>HetCons (VC.Rec el f) (VC.Rec el f) val  rs (r ': rs) where
+--  hcons = (VC.:&)
 
 
 
