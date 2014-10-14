@@ -10,10 +10,14 @@
 {-# LANGUAGE FunctionalDependencies#-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-#  LANGUAGE PolyKinds #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 module HetList where
 
 --import  qualified   Data.Vinyl.Core as VC
 --import  qualified   Data.Vinyl.TyFun as TF
+--import  qualified   Data.Vinyl.Derived as  VD
+--import qualified Data.Vinyl.Idiom.Identity as VII
+--import qualified Data.Vinyl.Universe.Id as VUI
 
 infixr 3 `hcons`
 infixr 3 `VHCons`
@@ -66,6 +70,20 @@ let ls = 1 `hcons` 2 `hcons` (hnil )  in ls :: (SizedList (S (S Z)) Int)
 
 -}
 
+infixr 3 :&
+
+
+{- This is from the new simplified version of vinyl  -}
+data Rec :: (u -> *) -> [u] -> * where
+   RNil :: Rec f '[]
+   (:&) :: !(f r) -> !(Rec f rs) -> Rec f (r ': rs)
+
+instance  Show (Rec f '[]) where
+  show _ = "RNil"
+
+instance (Show (f a), Show (Rec f as)) => Show (Rec f (a ': as)) where
+   show ((:&) v  vs) = show v ++ " :& " ++ show vs
+   --show _ = error "impossible"
 
 data VHList (xs ::[*] ) where
   VHNil :: VHList '[]
@@ -119,10 +137,10 @@ instance (Show a, Show (SizedList n a) ) => Show (SizedList (S n) a) where
 --instance (n~Z)=>HetNil (Flip2Nat SizedList a) n  where
 --    hnil = F2N ZL
 
-instance (a ~ b, b~c,a~c, m~(S n)) =>HetCons (SizedList n) (SizedList m) a b c   where
+instance (a ~ b, b~c,a~c, m~(S n),aval~a) =>HetCons (SizedList n) (SizedList m) a aval  b c   where
   hcons = ConL
 
-instance  (n~Z)=>HetNil (SizedList n) a where
+instance  (n~Z)=>HetNil (SizedList n a)  where
   hnil = ZL
 
 {-
@@ -131,36 +149,56 @@ note, f' res -> h
 precludes an ordered hrecord type (i think)
 -}
 
-class HetCons (f:: k -> * ) (f':: k -> * ) (h :: * ) (tl:: k) (res :: k)
-          | f-> f', f'-> f,f h tl -> res , f h res -> tl, f res tl -> h, f' res -> h
+class HetCons (f:: k -> * ) (f':: k -> * ) (h :: hd ) (hval :: * ) (tl:: k) (res :: k)
+          | f-> f', f'-> f
+            ,f h tl -> res , f h res -> tl, f res tl -> h
+            , f' res -> h
+            , f  tl res  -> h
+            , f'  tl res -> h
+            --, f hval tl res  -> h
+            --, f' hval tl res -> h
+            --, f hval -> h
+            , f h -> hval
+            --, f' hval -> h
+            , f' h -> hval
+            -- , f' h tl -> res
             --, f' h tl -> res , f' res tl -> h , f' h res -> tl
                  where
-  hcons :: h -> f tl -> f' res
+  hcons :: hval  -> f tl -> f' res
+  --hlift :: h -> hval
+  --hunlift :: hval -> h
 
 
-class HetNil (f:: k -> * ) (a :: k)  where
-  hnil :: f a
+class HetNil nil where  -- (f:: k -> * ) (a :: k)  where
+  hnil :: nil
 
-instance HetNil [] a where
+--class HetFromList to from | to -> from, from -> to where
+-- type Item
+
+
+instance HetNil [a]  where
   hnil = []
 
 -- need to use the mertens trick
-instance (res ~ '[])=> HetNil VHList res  where
+instance (a ~ ('[] :: [*] )) => HetNil  (VHList a) where ---  (res ~ '[])=> HetNil VHList res  where
   hnil = VHNil
 
-instance HetCons VHList  VHList (a:: *) (bs :: [*]) ((a ': bs) :: [*]) where
+instance (a~aval)=>HetCons VHList  VHList (a:: *) ( aval:: * ) (bs :: [*]) ( (a ': bs) :: [*] ) where
   hcons = VHCons
 
+
 -- merten trick again
-instance (a~b,b~c,a~c)=> HetCons []  [] (a :: *) (b :: * ) (c:: *) where
+instance (a~b,b~c,a~c, aval~ a)=> HetCons []  [] (a :: *) (aval:: *) (b :: * ) (c:: *) where
     hcons = (:)
 
 
---instance (ls ~ '[])=>HetNil (VC.Rec el f) ls  where
---  hnil = VC.RNil
 
---instance (val~ (f  (el TF.$ r) )) =>HetCons (VC.Rec el f) (VC.Rec el f) val  rs (r ': rs) where
---  hcons = (VC.:&)
+
+instance (ls ~ ('[]::[k]))=>HetNil (Rec  f  ls)  where
+  hnil = RNil
+
+instance (f~g, val ~ f r)=>  HetCons (Rec f ) (Rec g)  r val  rs (r ': rs) where
+  hcons =  (:&)
 
 
 
