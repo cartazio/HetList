@@ -16,6 +16,7 @@ module HetList where
 
 infixr 3 `hcons`
 infixr 3 `VHCons`
+infixr 3 `ConL`
 
 
 
@@ -66,11 +67,28 @@ instance (Show (VHList bs), Show a )=> Show (VHList (a ': bs)) where
 
 
 data Nat = S Nat | Z
-  deriving show
+  deriving Show
+type S = 'S
+type Z = 'Z
 
 data SizedList (n :: Nat) a where
   ZL :: SizedList Z a
   ConL :: a -> SizedList n a -> SizedList (S n) a
+
+instance Show (SizedList Z a) where
+    show _ = "ZL"
+
+instance (Show a, Show (SizedList n a) ) => Show (SizedList (S n) a) where
+  show (ConL a as) =  show a ++ " `ConL` " ++ show as
+
+newtype Flip2Nat (f :: Nat -> * -> * ) (e :: *) (n :: Nat) = F2N { getFN :: f n e}
+  deriving Show
+
+instance (m ~ S n)=> HetCons (Flip2Nat SizedList a) a (n :: Nat) (m :: Nat ) where
+  hcons = \h (F2N tl) -> F2N $!ConL h tl
+
+instance (n~Z)=>HetNil (Flip2Nat SizedList a) n  where
+    hnil = F2N ZL
 
 
 class HetCons (f:: k -> * ) (h :: * ) (tl:: k) (res :: k) | f h tl -> res , f h res -> tl, f res tl -> h  where
