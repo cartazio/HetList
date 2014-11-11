@@ -160,16 +160,7 @@ class HetCons (f:: k -> * ) (f':: m -> * ) (h :: * ) (tl:: k) (res :: m)
             , f' res -> h
             , f  tl res  -> h
             , f'  tl res -> h
-            --, f  tl res  -> hval
-            --, f'  tl res -> hval
-            --, f hval tl res  -> h
-            --, f' hval tl res -> h
-            --, f hval -> h
-            --, f h -> hval
-            --, f' hval -> h
-            --, f' h -> hval
-            -- , f' h tl -> res
-            --, f' h tl -> res , f' res tl -> h , f' h res -> tl
+
                  where
   hcons :: h  -> f tl -> f' res
   --hlift :: h -> hval
